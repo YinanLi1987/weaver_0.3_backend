@@ -3,3 +3,6 @@ start.sh
 app/__pycache__/
 /app/**/__pycache__/
 /__pycache__/
+serviceAccountKey.json
+.env
+.DS_Store
