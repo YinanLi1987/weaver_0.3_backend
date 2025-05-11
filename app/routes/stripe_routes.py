@@ -4,8 +4,7 @@ from ..firebase_auth import verify_firebase_token
 import stripe
 import os
 from pydantic import BaseModel
-print("STRIPE_KEY:", os.getenv("STRIPE_SECRET_KEY")[:6])  
-print(os.getenv("STRIPE_PRICE_ID"))#
+
 router = APIRouter(prefix="/api/stripe")
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")

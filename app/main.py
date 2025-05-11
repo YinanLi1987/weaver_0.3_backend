@@ -6,8 +6,10 @@ from dotenv import load_dotenv
 load_dotenv()
 from app.routes.user_routes import router as user_router  # ✅ 更干净地导入 router
 from app.routes.stripe_routes import router as stripe_router
-from dotenv import load_dotenv
-load_dotenv()
+from app.routes import stripe_webhook
+from app.routes import upload
+from app.routes import analyze
+
 
 
 app = FastAPI()
@@ -27,3 +29,6 @@ def read_root():
 # Include user API routes
 app.include_router(user_router)
 app.include_router(stripe_router)
+app.include_router(stripe_webhook.router)
+app.include_router(upload.router, prefix="/api")
+app.include_router(analyze.router, prefix="/api")
