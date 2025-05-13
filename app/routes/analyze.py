@@ -34,7 +34,7 @@ async def analyze(request: AnalyzeRequest):
                     if isinstance(value, dict)
                 }
                 llm_results.append(LLMResult(model=model, extracted=structured))
-
+             
             results.append({
                 "id": row.get("__id__", ""),
                 "columns": row,
