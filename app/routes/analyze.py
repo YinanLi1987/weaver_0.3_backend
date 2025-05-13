@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-
+from app.state import progress_total_rows
 from app.models.analyze import AnalyzeRequest, LLMResult, EntityEvidence
 from app.services.file_service import load_selected_columns
 from app.services.llm_input_builder import build_llm_input
@@ -20,6 +20,7 @@ async def analyze(request: AnalyzeRequest):
 
         # 读取 CSV 内容
         rows = load_selected_columns(request.csvFileName, request.selectedColumns)
+        progress_total_rows = len(rows) 
 
         results = []
         for row in rows:
