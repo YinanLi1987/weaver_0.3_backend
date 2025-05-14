@@ -1,19 +1,21 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-from app.services.redis_client import init_progress, increment_progress
+
+from fastapi import BackgroundTasks
+from app.services.redis_client import init_progress
 
 from app.models.analyze import AnalyzeRequest, LLMResult, EntityEvidence
 from app.services.file_service import load_selected_columns
-from app.services.llm_input_builder import build_llm_input
+
 from app.services.prompt_service import build_prompt_model_and_string
-from app.services.llm_runner import run_entity_extraction
+
+from app.services.tasks import run_analysis_task
 import uuid
 
 router = APIRouter()
 
 @router.post("/analyze")
-async def analyze(request: AnalyzeRequest):
+async def analyze(request: AnalyzeRequest,background_tasks: BackgroundTasks):
     try:
         task_id = str(uuid.uuid4())
         # 构建 Prompt 模型与 Prompt 模板
@@ -26,37 +28,16 @@ async def analyze(request: AnalyzeRequest):
         total_rows = len(rows)
          # Initialize Redis progress for this task
         init_progress(task_id, request.models, total_rows)
+         # Run task in background
+        background_tasks.add_task(
+            run_analysis_task, task_id, request, model_class, prompt_class_str, rows
+        )
 
-        results = []
-        for row in rows:
-            article_input = build_llm_input(row, request.selectedColumns)
-            llm_results = []
+        return JSONResponse(content={"taskId": task_id})
 
-            for model in request.models:
-                extracted = run_entity_extraction(prompt_class_str, model_class, article_input, model)
-                structured = {
-                    field: EntityEvidence(**value)
-                    for field, value in extracted.items()
-                    if isinstance(value, dict)
-                }
-                llm_results.append(LLMResult(model=model, extracted=structured))
-                 
-                # Increment progress for this model
-                increment_progress(task_id, model)
-                current_index = rows.index(row) + 1  # 假设 rows 是 list
-                total = len(rows)
-                print(f"{model}: {current_index}/{total}")
-
-             
-            results.append({
-                "id": row.get("__id__", ""),
-                "columns": row,
-                "llmResults": llm_results,
-                "finalEntities": {}
-            })
-
-        return JSONResponse(content=jsonable_encoder({"taskId": task_id,"results": results}))
-
+        
     except Exception as e:
+        print(f"🔥 Analyze failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 

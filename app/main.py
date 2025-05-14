@@ -10,6 +10,7 @@ from app.routes import stripe_webhook
 from app.routes import upload
 from app.routes import analyze
 from app.routes import progress
+from app.routes import results
 
 
 app = FastAPI()
@@ -33,3 +34,4 @@ app.include_router(stripe_webhook.router)
 app.include_router(upload.router, prefix="/api")
 app.include_router(analyze.router, prefix="/api")
 app.include_router(progress.router, prefix="/api")
+app.include_router(results.router, prefix="/api")
