@@ -1,18 +1,21 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from app.state import progress_total_rows
+from app.services.redis_client import init_progress, increment_progress
+
 from app.models.analyze import AnalyzeRequest, LLMResult, EntityEvidence
 from app.services.file_service import load_selected_columns
 from app.services.llm_input_builder import build_llm_input
 from app.services.prompt_service import build_prompt_model_and_string
 from app.services.llm_runner import run_entity_extraction
+import uuid
 
 router = APIRouter()
 
 @router.post("/analyze")
 async def analyze(request: AnalyzeRequest):
     try:
+        task_id = str(uuid.uuid4())
         # 构建 Prompt 模型与 Prompt 模板
         model_class, prompt_class_str = build_prompt_model_and_string(
             [p.dict() for p in request.prompts]
@@ -20,7 +23,9 @@ async def analyze(request: AnalyzeRequest):
 
         # 读取 CSV 内容
         rows = load_selected_columns(request.csvFileName, request.selectedColumns)
-        progress_total_rows = len(rows) 
+        total_rows = len(rows)
+         # Initialize Redis progress for this task
+        init_progress(task_id, request.models, total_rows)
 
         results = []
         for row in rows:
@@ -35,6 +40,13 @@ async def analyze(request: AnalyzeRequest):
                     if isinstance(value, dict)
                 }
                 llm_results.append(LLMResult(model=model, extracted=structured))
+                 
+                # Increment progress for this model
+                increment_progress(task_id, model)
+                current_index = rows.index(row) + 1  # 假设 rows 是 list
+                total = len(rows)
+                print(f"{model}: {current_index}/{total}")
+
              
             results.append({
                 "id": row.get("__id__", ""),
@@ -43,7 +55,8 @@ async def analyze(request: AnalyzeRequest):
                 "finalEntities": {}
             })
 
-        return JSONResponse(content=jsonable_encoder({"results": results}))
+        return JSONResponse(content=jsonable_encoder({"taskId": task_id,"results": results}))
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

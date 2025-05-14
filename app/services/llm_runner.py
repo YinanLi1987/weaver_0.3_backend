@@ -6,7 +6,7 @@ from .llms.gpt_handler import run_gpt
 from .llms.claude_handler import run_claude
 
 def run_entity_extraction(prompt_class_str: str, model_schema: type[BaseModel], article_input: str, model: str) -> Dict:
-    full_prompt = f"{prompt_class_str}\n\nInput:\n{article_input}"
+    #full_prompt = f"{prompt_class_str}\n\nInput:\n{article_input}"
     print(f"✅ Calling model: {model}")
 
     try:

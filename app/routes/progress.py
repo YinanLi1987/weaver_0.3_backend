@@ -1,13 +1,13 @@
-# backend/api/progress.py
-
-from fastapi import APIRouter
-from app.state import progress_tracker, progress_total_rows # a global dict per model
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
+from app.services.redis_client import get_progress
 
 router = APIRouter()
 
-@router.get("/progress")
-def get_progress():
-      return {
-        "progress": progress_tracker,        # e.g. {"gpt-4": 22, ...}
-        "total": progress_total_rows         # e.g. 100
-    } # e.g., {"gpt-4": 42, "mistral": 17}
+@router.get("/progress/{task_id}")
+async def progress(task_id: str):
+    """Expose task progress by task ID."""
+    data = get_progress(task_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Progress not found")
+    return JSONResponse(content=data)

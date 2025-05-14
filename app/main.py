@@ -11,6 +11,7 @@ from app.routes import upload
 from app.routes import analyze
 from app.routes import progress
 
+
 app = FastAPI()
 # Allow frontend dev server to talk to backend
 app.add_middleware(
@@ -31,4 +32,4 @@ app.include_router(stripe_router)
 app.include_router(stripe_webhook.router)
 app.include_router(upload.router, prefix="/api")
 app.include_router(analyze.router, prefix="/api")
-app.include_router(progress.router,prefix="/api")
+app.include_router(progress.router, prefix="/api")
