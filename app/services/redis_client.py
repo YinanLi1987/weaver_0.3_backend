@@ -1,9 +1,16 @@
 import redis
 import os
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Parse Redis URL from environment variable
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+redis_url = (
+    os.getenv("REDIS_URL") or
+    os.getenv("REDISCLOUD_URL") or
+    "redis://localhost:6379"
+)
 parsed_url = urlparse(redis_url)
 
 # Initialize Redis client

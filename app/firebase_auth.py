@@ -1,11 +1,19 @@
 # app/firebase_auth.py
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials, auth as firebase_auth
 from fastapi import Header, HTTPException, status
 
 # Initialize Firebase Admin SDK only once
 if not firebase_admin._apps:
-    cred = credentials.Certificate("serviceAccountKey.json")
+    cred_str = os.getenv("FIREBASE_CREDENTIAL")
+    if cred_str:
+        cred_data = json.loads(cred_str)
+        cred = credentials.Certificate(cred_data)
+    else:
+        cred= credentials.Certificate( "serviceAccountKey.json")
+        
     firebase_admin.initialize_app(cred)
 
 def verify_firebase_token(authorization: str = Header(...)) -> tuple[str, str]:
