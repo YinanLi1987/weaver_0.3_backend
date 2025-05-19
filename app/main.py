@@ -14,10 +14,15 @@ from app.routes import results
 
 
 app = FastAPI()
+origins = [
+    "http://localhost:5173",  # 本地开发
+    "http://localhost:3000",  # serve dist 本地测试
+    os.getenv("FRONTEND_URL", "https://weaver-0-3-frontend.vercel.app/")  # 生产站点
+]
 # Allow frontend dev server to talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Frontend dev server origin
+    allow_origins=origins,  # Frontend dev server origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
