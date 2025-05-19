@@ -4,7 +4,7 @@ firebase-admin==6.8.0
 redis==6.1.0
 python-multipart==0.0.9
 pydantic-settings==2.7.1
-pandas==2.2.1
+pandas
 anthropic==0.51.0
 mistralai==1.7.0
 stripe==12.1.0
