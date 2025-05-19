@@ -4,10 +4,13 @@ from ..firebase_auth import verify_firebase_token
 import stripe
 import os
 from pydantic import BaseModel
-
+from dotenv import load_dotenv
 router = APIRouter(prefix="/api/stripe")
-
+if os.getenv("HEROKU") is None:
+    load_dotenv(dotenv_path=".env")
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+if stripe.api_key is None:
+    raise Exception("Missing STRIPE_SECRET_KEY")
 
 class CheckoutResponse(BaseModel):
     checkout_url: str

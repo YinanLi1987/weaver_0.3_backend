@@ -5,11 +5,17 @@ from app.db import SessionLocal
 from app.models.user import User
 import stripe
 import os
-
+from dotenv import load_dotenv
 router = APIRouter(prefix="/api/stripe")
-
+if os.getenv("HEROKU") is None:
+    load_dotenv(dotenv_path=".env")
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+if not stripe.api_key:
+    raise RuntimeError("❌ Missing STRIPE_SECRET_KEY")
+
+if not webhook_secret:
+    raise RuntimeError("❌ Missing STRIPE_WEBHOOK_SECRET")
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request):
