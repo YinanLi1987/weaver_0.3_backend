@@ -10,3 +10,11 @@ mistralai==1.7.0
 stripe==12.1.0
 SQLAlchemy==2.0.41
 psycopg2-binary
+numpy
+aiofiles
+openai
+anthropic
+instructor
+python-dotenv
+requests
+jsonref
