@@ -17,7 +17,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",  # 本地开发
     "http://localhost:3000",  # serve dist 本地测试
-    os.getenv("FRONTEND_URL", "https://weaver-0-3-frontend.vercel.app/")  # 生产站点
+    os.getenv("FRONTEND_URL", "https://weaver-03.vercel.app")  # 生产站点
 ]
 # Allow frontend dev server to talk to backend
 app.add_middleware(
