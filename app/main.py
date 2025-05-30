@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db import Base, engine
+from app.models import user, llm_usage_log, payment_log
 from dotenv import load_dotenv
 load_dotenv()
 from app.routes.user_routes import router as user_router  # ✅ 更干净地导入 router
@@ -11,7 +12,7 @@ from app.routes import upload
 from app.routes import analyze
 from app.routes import progress
 from app.routes import results
-
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 origins = [
