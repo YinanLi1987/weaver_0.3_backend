@@ -5,14 +5,14 @@ from app.db import Base, engine
 from app.models import user, llm_usage_log, payment_log
 from dotenv import load_dotenv
 load_dotenv()
-from app.routes.user_routes import router as user_router  # ✅ 更干净地导入 router
-from app.routes.stripe_routes import router as stripe_router
+from app.routes import user_routes
+from app.routes import stripe_routes
 from app.routes import stripe_webhook
 from app.routes import upload
 from app.routes import analyze
 from app.routes import progress
 from app.routes import results
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 origins = [
@@ -35,9 +35,9 @@ def read_root():
     return {"message": "Hello from FastAPI!"}
 
 # Include user API routes
-app.include_router(user_router)
-app.include_router(stripe_router)
-app.include_router(stripe_webhook.router)
+app.include_router(user_routes.router,prefix="/api/user")
+app.include_router(stripe_routes.router,prefix="/api/stripe")
+app.include_router(stripe_webhook.router,prefix="/api/stripe")
 app.include_router(upload.router, prefix="/api")
 app.include_router(analyze.router, prefix="/api")
 app.include_router(progress.router, prefix="/api")
