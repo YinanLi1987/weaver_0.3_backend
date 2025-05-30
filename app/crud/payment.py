@@ -33,3 +33,10 @@ def log_payment(
     db.commit()
     db.refresh(payment)
     return payment
+def get_payments_for_user(db: Session, user_id: str):
+    return (
+        db.query(PaymentLog)
+        .filter(PaymentLog.user_id == user_id)
+        .order_by(PaymentLog.timestamp.desc())
+        .all()
+    )

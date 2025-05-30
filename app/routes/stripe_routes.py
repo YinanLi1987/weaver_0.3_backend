@@ -10,8 +10,8 @@ if os.getenv("HEROKU") is None:
     load_dotenv(dotenv_path=".env")
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 stripe_price_id = os.getenv("STRIPE_PRICE_ID")
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-
+#frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+frontend_url =  "http://localhost:5173"
 if stripe.api_key is None:
     raise Exception("Missing STRIPE_SECRET_KEY")
 if not stripe.api_key:
