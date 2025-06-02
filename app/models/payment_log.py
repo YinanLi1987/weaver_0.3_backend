@@ -13,6 +13,7 @@ class PaymentLog(Base):
     amount = Column(Numeric(20, 6), nullable=False)
     currency = Column(String(10), default="eur", nullable=False)
     stripe_session_id = Column(String, nullable=False)
-    #status = Column(String, default="success")  # success / failed / refunded
+    status = Column(String(20), default="success", nullable=False)  # success / failed / refunded
+    message = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="payment_logs")

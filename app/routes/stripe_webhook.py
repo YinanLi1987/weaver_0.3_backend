@@ -46,9 +46,21 @@ async def stripe_webhook(request: Request):
     db: Session = SessionLocal()
 
     try:
+        if not uid:
+            raise ValueError("Missing firebase_uid in metadata")
+
+        print(f"✅ Processing session {session_id} for uid={uid}, amount={amount_cents} {currency}")
+
         user = db.query(User).filter(User.uid == uid).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
+        from app.models.payment_log import PaymentLog
+        existing = db.query(PaymentLog).filter_by(stripe_session_id=session_id).first()
+        if existing:
+            print("⚠️ Duplicate session detected, skipping.")
+            return {"status": "duplicate"}
+
+        
 
         amount_decimal = Decimal(amount_cents) / 100  # Stripe uses cents
 
@@ -58,16 +70,34 @@ async def stripe_webhook(request: Request):
                 user_id=user.uid,
                 amount=amount_decimal,
                 stripe_session_id=session_id,
-                currency=currency
+                currency=currency,
+                status="success",
+                message="Webhook processed successfully"
             )
 
             # 更新用户余额
         update_user_balance(db, user_id=user.uid, delta=amount_decimal)
+        db.commit()
 
         return {"status": "success"}
 
     except Exception as e:
           db.rollback()
+          print("❌ Webhook error:", str(e)) 
+          try:
+            log_payment(
+                db=db,
+                user_id=uid,
+                amount=Decimal(amount_cents) / 100,
+                stripe_session_id=session_id,
+                currency=currency,
+                status="failed",
+                message=str(e)
+            )
+            db.commit()
+          except Exception as log_error:
+              pass
+          
           raise HTTPException(status_code=500, detail=f"Webhook processing failed: {str(e)}")
 
     finally:
