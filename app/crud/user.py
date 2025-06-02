@@ -3,6 +3,7 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from typing import Optional
+from decimal import Decimal
 
 
 def get_user_by_id(db: Session, user_id: str) -> Optional[User]:
@@ -32,12 +33,13 @@ def get_or_create_user(db: Session, user_id: str, email: str) -> User:
     return create_user(db, user_id, email)
 
 
-def update_user_balance(db: Session, user_id: str, delta: float) -> User:
+def update_user_balance(db: Session, user_id: str, delta: Decimal) -> User:
     user = get_user_by_id(db, user_id)
     if not user:
         raise ValueError("User not found")
 
-    new_balance = user.balance + delta
+    new_balance = Decimal(user.balance or 0) + delta
+
     if new_balance < 0:
         raise ValueError("Insufficient balance")
 
