@@ -12,6 +12,8 @@ def log_payment(
     amount: Decimal,
     stripe_session_id: str,
     currency: str = "eur",
+    status: str = "success",
+    message: Optional[str] = None,
     timestamp: Optional[datetime] = None,
     
 ) -> PaymentLog:
@@ -27,6 +29,8 @@ def log_payment(
         amount=amount,
         stripe_session_id=stripe_session_id,
         currency=currency,
+        status=status,
+        message=message,
         timestamp=timestamp or datetime.utcnow()
     )
     db.add(payment)
