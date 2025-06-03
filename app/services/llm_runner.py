@@ -12,15 +12,15 @@ def run_entity_extraction(prompt_class_str: str, model_schema: type[BaseModel], 
 
     try:
         if model.startswith("gpt"):
-            
+            print("📢 Using GPT")
             result= run_gpt(prompt_class_str, model_schema, article_input, model)
 
         elif model.startswith("claude"):
-            
+            print("📢 Using Claude")
             result=run_claude(prompt_class_str, model_schema, article_input, model)
 
         elif model.startswith("mistral"):
-            
+            print("📢 Using Mistral")
             result=run_mistral(prompt_class_str, model_schema, article_input, model)
 
         else:
