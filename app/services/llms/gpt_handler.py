@@ -5,6 +5,7 @@ from typing import List, Literal, Dict,Type
 from instructor import from_openai
 from pydantic import BaseModel
 import tiktoken
+from app.services.key_pool import get_openai_key
 from dotenv import load_dotenv
 import os
 if os.getenv("HEROKU") is None:
@@ -24,7 +25,9 @@ def run_gpt(prompt_class_str: str, model_schema: type[BaseModel], article_input:
     )
     full_prompt = f"{prompt_class_str}\n\nInput:\n{article_input}"
     input_tokens = count_tokens(system_prompt, model) + count_tokens(full_prompt, model)
-    openai_client = from_openai(OpenAI(api_key=os.getenv("OPENAI_API_KEY")))
+    api_key = get_openai_key()  # ✅ 获取轮询中的 API key
+    openai_client = from_openai(OpenAI(api_key=api_key))
+    #openai_client = from_openai(OpenAI(api_key=os.getenv("OPENAI_API_KEY")))
     try:
         
 

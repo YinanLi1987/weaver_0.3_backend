@@ -1,5 +1,5 @@
 # app/models/llm_usage_log.py
-from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey,Numeric
 from datetime import datetime
 from app.db import Base
 
@@ -14,3 +14,4 @@ class LLMUsageLog(Base):
     cost = Column(Float, nullable=False)  
     timestamp = Column(DateTime, default=datetime.utcnow)
     prompt_summary = Column(String, nullable=True)
+    billed_amount = Column(Numeric(10, 6), nullable=True)

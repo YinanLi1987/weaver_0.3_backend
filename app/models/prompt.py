@@ -5,3 +5,5 @@ class PromptDefinition(BaseModel):
     name: str
     description: str
     examples: List[str]
+    class Config:
+        extra = "ignore" 

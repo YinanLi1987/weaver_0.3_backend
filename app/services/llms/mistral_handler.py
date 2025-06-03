@@ -2,6 +2,7 @@ from mistralai import Mistral
 from instructor import from_mistral, Mode
 from typing import List, Literal, Dict,Type
 from pydantic import BaseModel
+from app.services.key_pool import get_mistral_key
 from dotenv import load_dotenv
 import os
 
@@ -19,11 +20,14 @@ def run_mistral(prompt_class_str: str, model_schema: type[BaseModel], article_in
         "Use the following Pydantic BaseModel schema to extract structured data from the input."
     )
     full_prompt = f"{prompt_class_str}\n\nInput:\n{article_input}"
-    input_tokens = count_tokens_mistral(full_prompt)
+    input_tokens =  count_tokens_mistral(system_prompt) +count_tokens_mistral(full_prompt)
+      # ✅ 获取轮询中的 API key
+    
 
     try:
+        api_key = get_mistral_key()
         client = from_mistral(
-            client=Mistral(api_key=os.getenv("MISTRALAI_API_KEY")),
+            client=Mistral(api_key=api_key),
             mode=Mode.MISTRAL_TOOLS  # 用老接口
         )
 

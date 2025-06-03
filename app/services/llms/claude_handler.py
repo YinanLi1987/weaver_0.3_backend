@@ -2,6 +2,7 @@ from anthropic import Anthropic
 from instructor import from_anthropic
 from typing import List, Literal, Dict,Type
 from pydantic import BaseModel
+from app.services.key_pool import get_claude_key
 from dotenv import load_dotenv
 import os
 
@@ -20,7 +21,8 @@ def run_claude(prompt_class_str: str, model_schema: type[BaseModel], article_inp
     input_tokens = count_tokens_claude(system_prompt) + count_tokens_claude(full_prompt)
 
     try:
-        client = from_anthropic(Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY")))
+        api_key = get_claude_key()  # ✅ 获取轮询中的 API key
+        client = from_anthropic(Anthropic(api_key=api_key))
 
         response = client.chat.completions.create(
             model=model,

@@ -9,7 +9,8 @@ from app.routes import user_routes
 from app.routes import stripe_routes
 from app.routes import stripe_webhook
 from app.routes import upload
-from app.routes import analyze
+#from app.routes import analyze
+from app.routes import analyze_2
 from app.routes import progress
 from app.routes import results
 #Base.metadata.create_all(bind=engine)
@@ -39,6 +40,7 @@ app.include_router(user_routes.router,prefix="/api/user")
 app.include_router(stripe_routes.router,prefix="/api/stripe")
 app.include_router(stripe_webhook.router,prefix="/api/stripe")
 app.include_router(upload.router, prefix="/api")
-app.include_router(analyze.router, prefix="/api")
+#app.include_router(analyze.router, prefix="/api")
+app.include_router(analyze_2.router, prefix="/api")
 app.include_router(progress.router, prefix="/api")
 app.include_router(results.router, prefix="/api")

@@ -1,3 +1,4 @@
+#app/services/llm_runner.py
 from pydantic import BaseModel
 from typing import Dict
 import traceback
@@ -38,7 +39,7 @@ def run_entity_extraction(prompt_class_str: str, model_schema: type[BaseModel], 
 
     except Exception as e:
         print(f"❌ LLM extraction failed (model={model}):", e)
-        print(result)
+        #print(result)
         #print("🧵 Full prompt sent to model:")
         #print(full_prompt)
         print("🐛 Exception traceback:")

@@ -6,6 +6,7 @@ from app.db import get_db
 from app.firebase_auth import verify_firebase_token
 from app.crud.user import get_or_create_user
 from app.crud.payment import get_payments_for_user
+from app.crud.llm_usage_log import get_usage_logs_for_user
 
 router = APIRouter()
 
@@ -31,3 +32,23 @@ def get_user_payments(
     uid, _ = uid_email
     payments = get_payments_for_user(db, uid)
     return [{"amount": float(p.amount), "timestamp": p.timestamp.isoformat()} for p in payments]
+@router.get("/usage")
+def get_user_usage(
+    uid_email=Depends(verify_firebase_token),
+    db: Session = Depends(get_db)
+):
+    uid, _ = uid_email
+    logs = get_usage_logs_for_user(db, uid)
+
+    return [
+        {
+            "model": log.model,
+            "tokens_input": log.tokens_input,
+            "tokens_output": log.tokens_output,
+            "cost": float(log.cost),
+            "billed_amount": float(log.billed_amount or 0),
+            "timestamp": log.timestamp.isoformat(),
+            "prompt_summary": log.prompt_summary,
+        }
+        for log in logs
+    ]
