@@ -10,11 +10,14 @@ from app.services.redis_client import increment_progress, r
 from app.models.analyze import EntityEvidence, AnalyzeRequest, LLMResult
 from app.services.cost_service import calculate_cost
 from app.services.usage_service import log_usage_and_charge_user
+from sqlalchemy.orm import Session
+
 
 async def process_model_for_row(db, user, task_id, row_id, model, article_input, model_class, prompt_class_str, results):
     try:
+        user = db.merge(user)
         start_time = time.time()
-        extracted = await asyncio.to_thread(run_entity_extraction, prompt_class_str, model_class, article_input, model)
+        extracted = await run_entity_extraction(prompt_class_str, model_class, article_input, model)
         elapsed = time.time() - start_time
 
         input_tokens = extracted.get("input_tokens", 0)
@@ -59,37 +62,55 @@ async def process_model_for_row(db, user, task_id, row_id, model, article_input,
 async def run_analysis_task(task_id: str, request: AnalyzeRequest, model_class, prompt_class_str: str, rows: list[dict], db, user):
     results = []
 
-    for row in rows:
-        article_input = build_llm_input(row, request.selectedColumns)
-        tasks = [
-            process_model_for_row(db, user, task_id, row.get("__id__", ""), model, article_input, model_class, prompt_class_str, results)
-            for model in request.models
-        ]
+    try:
+        for row in rows:
+            article_input = build_llm_input(row, request.selectedColumns)
+            tasks = [
+                process_model_for_row(
+                    db, user, task_id, row.get("__id__", ""),
+                    model, article_input, model_class, prompt_class_str, results
+                )
+                for model in request.models
+            ]
 
-        try:
-            model_results = await asyncio.gather(*tasks)
-        except ValueError as e:
-            if "Insufficient balance" in str(e):
-                partial = jsonable_encoder({
-                    "status": "partial",
-                    "message": str(e),
-                    "results": results
-                })
-                r.set(f"analyze_results:{task_id}", json.dumps(partial), ex=3600)
-                return
+            try:
+                model_results = await asyncio.gather(*tasks, return_exceptions=True)
+            except ValueError as e:
+                if "Insufficient balance" in str(e):
+                    partial = jsonable_encoder({
+                        "status": "partial",
+                        "message": str(e),
+                        "results": results
+                    })
+                    r.set(f"analyze_results:{task_id}", json.dumps(partial), ex=3600)
+                    print(f"⚠️ Task {task_id} ended early due to insufficient balance.")
+                    return
 
-        llm_results = [
-            LLMResult(model=result["model"], extracted=result["extracted"])
-            for result in model_results if result
-        ]
+            llm_results = [
+                LLMResult(model=result["model"], extracted=result["extracted"])
+                for result in model_results if result
+            ]
 
-        results.append({
-            "id": row.get("__id__", ""),
-            "columns": row,
-            "llmResults": llm_results,
-            "finalEntities": {}
+            results.append({
+                "id": row.get("__id__", ""),
+                "columns": row,
+                "llmResults": llm_results,
+                "finalEntities": {}
+            })
+
+        # ✅ 全部成功，写入 completed
+        encoded_results = jsonable_encoder({"status": "completed", "results": results})
+        r.set(f"analyze_results:{task_id}", json.dumps(encoded_results), ex=3600)
+        print(f"✅ Task {task_id} completed.")
+
+    except Exception as e:
+        import traceback
+        print(f"🔥 Unexpected error in task {task_id}: {e}")
+        traceback.print_exc()
+
+        error_result = jsonable_encoder({
+            "status": "error",
+            "message": str(e),
+            "results": results  # ✅ 即使 error，也保留已完成部分
         })
-
-    encoded_results = jsonable_encoder({"status": "completed", "results": results})
-    r.set(f"analyze_results:{task_id}", json.dumps(encoded_results), ex=3600)
-    print(f"✅ Task {task_id} completed.")
+        r.set(f"analyze_results:{task_id}", json.dumps(error_result), ex=3600)

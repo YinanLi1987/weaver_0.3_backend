@@ -6,7 +6,7 @@ import uuid
 from app.models.llm_usage_log import LLMUsageLog
 from app.models.user import User
 from sqlalchemy.orm import Session
-
+from sqlalchemy.orm.util import has_identity
 PLATFORM_MARKUP = Decimal("1.3")  # 平台加价比例（30%）
 
 def log_usage_and_charge_user(
@@ -34,8 +34,10 @@ def log_usage_and_charge_user(
         prompt_summary=prompt_summary,
         timestamp=datetime.utcnow(),
     )
-
+    print(f"🧠 User in session? {has_identity(user)}")
+    print(f"💰 Before: {user.balance}")
     db.add(usage_log)
     user.balance = Decimal(str(user.balance)) - total_cost
+    print(f"💰 After: {user.balance}")
     db.commit()
     return usage_log
